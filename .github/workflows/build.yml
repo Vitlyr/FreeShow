@@ -10,7 +10,12 @@ jobs:
       matrix:
         os:
           [
-            windows-latest,
+            # windows-latest currently points at a runner image whose
+            # Visual Studio version node-gyp doesn't recognize yet
+            # ("find VS ... unknown version undefined"), breaking the
+            # grandiose/macadam native builds — pinned to windows-2022 to
+            # match the known-working runner release.yml already uses.
+            windows-2022,
             macos-latest,
             ubuntu-latest
           ]
@@ -22,7 +27,7 @@ jobs:
       - name: Install Node.js and NPM
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install dependencies
         run: npm install
