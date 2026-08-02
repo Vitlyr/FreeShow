@@ -1,8 +1,10 @@
 name: Release
 on:
-  push:
-    branches:
-      - "main"
+  # Was `push: branches: [main]` — this fork has no code-signing secrets
+  # configured (CSC_LINK/CSC_KEY_PASSWORD, Apple ID/notarization, Azure
+  # Trusted Signing), so every push was auto-triggering a Windows/macOS
+  # publish attempt that could only fail. Manual-only until those are set
+  # up; still runnable anytime from the Actions tab.
   workflow_dispatch:
 
 jobs:
