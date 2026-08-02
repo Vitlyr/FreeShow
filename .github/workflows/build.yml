@@ -21,18 +21,7 @@ jobs:
             # grandiose/macadam native builds — pinned to windows-2022 to
             # match the known-working runner release.yml already uses.
             windows-2022,
-            # macos-latest (Apple Silicon) fails packaging outright: "code
-            # has no resources but signature indicates they must be
-            # present". This project's asarUnpack (macadam/libspotifyctl
-            # native modules) adds files to the bundle after Electron's own
-            # prebuilt ad-hoc seal, invalidating it — arm64 requires a valid
-            # signature to even run, so electron-builder's post-build
-            # verification hard-fails. CSC_IDENTITY_AUTO_DISCOVERY=false
-            # didn't help (confirmed by testing — same failure). Intel
-            # runners don't enforce a valid signature the same way, so
-            # macos-13 sidesteps the issue entirely for this unsigned dev
-            # build.
-            macos-13,
+            macos-latest,
             ubuntu-latest
           ]
 
@@ -56,15 +45,14 @@ jobs:
       # installable to download. `npm run release` does invoke it, but
       # requires Windows/macOS code-signing secrets (Azure Trusted Signing,
       # Apple notarization) that aren't configured on this fork and would
-      # fail here. `pack` (--dir mode) assembles a real, runnable app
-      # folder via electron-builder without building an installer, and
-      # normally skips signing entirely with no cert configured — except on
-      # macOS, which still auto-applies an ad-hoc self-signature (required
-      # for arm64 to even run) and that step failed outright on the
-      # macos-latest (Apple Silicon) runner: "code has no resources but
-      # signature indicates they must be present". CSC_IDENTITY_AUTO_DISCOVERY
-      # =false turns off electron-builder's signing pass altogether,
-      # including that ad-hoc fallback.
+      # fail here. `pack` (--dir mode) assembles a real, runnable app folder
+      # via electron-builder without building an installer or attempting
+      # real code signing. macOS still ran its custom afterSign hook
+      # (scripts/macos/notarize.js) unconditionally though, which hard-
+      # failed with no Apple credentials set — fixed at the source (that
+      # script now skips notarizing when APPLE_ID etc. aren't present).
+      # CSC_IDENTITY_AUTO_DISCOVERY=false just avoids searching for a real
+      # signing identity that isn't there.
       - name: Package app (unsigned, unpacked)
         run: npm run pack
         env:
