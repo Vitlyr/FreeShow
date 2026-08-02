@@ -33,8 +33,41 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
+
+      # node_modules itself (not just npm's download cache, which
+      # setup-node's cache:npm above already covers) - this is what actually
+      # avoids the slow part: grandiose's native NDI SDK download+compile,
+      # which otherwise reruns from scratch on every single run, twice (once
+      # here for the system Node ABI, again inside `npm run pack` below for
+      # Electron's own Node ABI - @electron/rebuild skips modules it finds
+      # already built for the target ABI, so restoring node_modules from
+      # cache benefits both compiles, not just this first one).
+      - name: Cache node_modules
+        id: node-modules-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+
+      # electron-builder's own download cache (the Electron zip itself,
+      # winCodeSign tools, icon bundles, etc.) - separate from node_modules,
+      # re-downloaded every run otherwise regardless of whether any code
+      # changed.
+      - name: Cache electron-builder downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+            ~/Library/Caches/electron
+            ~/Library/Caches/electron-builder
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: ${{ runner.os }}-electron-builder-cache-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: npm install
 
       - name: Build app
