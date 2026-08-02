@@ -96,12 +96,23 @@ function connect() {
     })
 
     socket.on("message", (raw: Buffer | string) => {
+        // JSON.parse is synchronous and has no async variant - for a
+        // full_sync of a large library (thousands of songs, each with full
+        // lyrics/chords) this payload can be tens of MB, and parsing that
+        // blocks the event loop for its entire duration with no way to
+        // yield mid-parse. Logged explicitly (size + duration) to confirm
+        // this is really where the time goes before committing to a bigger
+        // fix (e.g. a delta sync protocol so full_sync doesn't need to
+        // resend content the client already has).
+        const byteLength = raw.length
+        const tParseStart = Date.now()
         let msg: Envelope
         try {
             msg = JSON.parse(raw.toString())
         } catch {
             return
         }
+        console.log(`songLibraryClient: received message type=${msg.type} bytes=${byteLength} parse=${Date.now() - tParseStart}ms`)
         handleMessage(msg).catch((err) => console.error("songLibraryClient: error handling message:", err.message))
     })
 
