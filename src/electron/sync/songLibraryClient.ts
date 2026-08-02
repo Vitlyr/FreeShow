@@ -77,7 +77,12 @@ function disconnect() {
 function connect() {
     if (!config?.enabled) return
 
-    const url = `ws://${config.ip}:${config.port}/api/sync`
+    // Node on Windows can take ~20-30s to resolve the hostname "localhost"
+    // (it tries the IPv6 ::1 route first, then falls back to IPv4 after a
+    // long OS-level timeout) - macOS/Linux resolve it instantly. Using the
+    // literal loopback address skips hostname resolution entirely.
+    const host = config.ip === "localhost" ? "127.0.0.1" : config.ip
+    const url = `ws://${host}:${config.port}/api/sync`
     console.log(`songLibraryClient: connecting to ${url}`)
 
     const socket = new WebSocket(url)
