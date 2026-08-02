@@ -23,7 +23,7 @@ import type { Folders, Project, Projects } from "../../types/Projects"
 import type { Show } from "../../types/Show"
 import { _store, getStore, safeStoreSet } from "../data/store"
 import { sendMain } from "../IPC/main"
-import { deleteFile, doesPathExist, getDataFolderPath, loadShows, writeFile } from "../utils/files"
+import { deleteFileAsync, doesPathExist, getDataFolderPath, loadShows, writeFileAsync } from "../utils/files"
 
 type SyncConfig = { enabled: boolean; ip: string; port: number }
 type Envelope = { v: number; type: string; payload: any }
@@ -167,42 +167,53 @@ function localShowModified(id: string): number {
     return getStore("SHOWS")[id]?.timestamps?.modified || 0
 }
 
-function writeShowFile(id: string, show: Show) {
+// Async (writeFileAsync/deleteFileAsync, not the sync writeFile/deleteFile
+// used elsewhere in this file) specifically because handleFullSync below
+// calls this once per song, and a full sync can be thousands of songs.
+// Synchronous fs calls in that loop blocked the main process's event loop
+// for the entire loop's duration - reported as the whole app freezing for
+// ~30s on Windows on every reconnect (Defender's real-time scanning
+// intercepts every single file write, which adds up fast over thousands of
+// files; macOS has no equivalent per-write interception, so the same loop
+// there was fast enough to go unnoticed). await-ing each write yields the
+// event loop between songs so the app stays responsive throughout, even
+// though the sync itself still takes real wall-clock time.
+async function writeShowFile(id: string, show: Show) {
     const showsPath = getDataFolderPath("shows")
     const oldName = getStore("SHOWS")[id]?.name
     const fileName = String(show.name || id) + ".show"
 
     if (oldName && oldName + ".show" !== fileName) {
         const oldPath = path.join(showsPath, oldName + ".show")
-        if (doesPathExist(oldPath)) deleteFile(oldPath)
+        if (doesPathExist(oldPath)) await deleteFileAsync(oldPath)
     }
 
-    writeFile(path.join(showsPath, fileName), JSON.stringify([id, show]), id)
+    await writeFileAsync(path.join(showsPath, fileName), JSON.stringify([id, show]), id)
 }
 
-function applySongUpsert(id: string, show: Show): boolean {
+async function applySongUpsert(id: string, show: Show): Promise<boolean> {
     if (!id || !show) return false
     if ((show.timestamps?.modified || 0) <= localShowModified(id)) return false // stale or an echo of our own change
-    writeShowFile(id, show)
+    await writeShowFile(id, show)
     return true
 }
 
-function handleSongUpsert(payload: { id: string; show: [string, Show] }) {
+async function handleSongUpsert(payload: { id: string; show: [string, Show] }) {
     if (!payload || !Array.isArray(payload.show)) return
     const [id, show] = payload.show
-    if (!applySongUpsert(id, show)) return
+    if (!(await applySongUpsert(id, show))) return
 
     refreshShows([show.name])
 }
 
-function handleSongDelete(payload: { id: string }) {
+async function handleSongDelete(payload: { id: string }) {
     if (!payload?.id) return
     const local = getStore("SHOWS")[payload.id]
     if (!local) return
 
     const showsPath = getDataFolderPath("shows")
     const filePath = path.join(showsPath, local.name + ".show")
-    if (doesPathExist(filePath)) deleteFile(filePath)
+    if (doesPathExist(filePath)) await deleteFileAsync(filePath)
 
     refreshShows([])
 }
@@ -244,7 +255,7 @@ async function handleProjectDelete(payload: { id: string }) {
 async function handleFullSync(payload: { songs?: [string, Show][]; projects?: { projects: Projects; folders: Folders; projectTemplates: Projects } }) {
     const changedNames: string[] = []
     for (const [id, show] of payload?.songs || []) {
-        if (applySongUpsert(id, show)) changedNames.push(show.name)
+        if (await applySongUpsert(id, show)) changedNames.push(show.name)
     }
     if (changedNames.length) refreshShows(changedNames)
 
