@@ -100,7 +100,14 @@ jobs:
       # the shared electron-builder.yaml, so the real release pipeline
       # (which does have real Azure credentials) is unaffected.
       - name: Package app (unsigned, unpacked)
-        run: npm run pack -- -c.win.signAndEditExecutable=false
+        # quoted: PowerShell (the default shell for Windows run: steps) was
+        # splitting the unquoted -c.win.signAndEditExecutable=false into two
+        # separate arguments at a space it inserted before the leading `.`,
+        # so electron-builder tried to read ".win.signAndEditExecutable=
+        # false" as a config file path instead of applying it as an override
+        # (confirmed by the actual failure: ENOENT opening that literal
+        # filename).
+        run: npm run pack -- "-c.win.signAndEditExecutable=false"
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
