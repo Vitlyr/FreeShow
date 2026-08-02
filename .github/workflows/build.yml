@@ -86,8 +86,21 @@ jobs:
       # script now skips notarizing when APPLE_ID etc. aren't present).
       # CSC_IDENTITY_AUTO_DISCOVERY=false just avoids searching for a real
       # signing identity that isn't there.
+      #
+      # Windows has the identical problem: win.azureSignOptions is
+      # configured unconditionally in electron-builder.yaml, and
+      # electron-builder signs the .exe before/regardless of installer
+      # creation even in --dir mode — with no Azure credentials set here,
+      # that appeared to hang indefinitely (build ran 40-60+ minutes with no
+      # error, on both of two independent attempts) rather than failing
+      # fast, most likely waiting on Trusted Signing tool setup that can
+      # never complete without auth. -c.win.signAndEditExecutable=false is
+      # electron-builder's own documented flag for skipping exe
+      # signing entirely — passed via CLI override here rather than editing
+      # the shared electron-builder.yaml, so the real release pipeline
+      # (which does have real Azure credentials) is unaffected.
       - name: Package app (unsigned, unpacked)
-        run: npm run pack
+        run: npm run pack -- -c.win.signAndEditExecutable=false
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
