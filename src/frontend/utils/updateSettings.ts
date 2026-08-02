@@ -72,6 +72,7 @@ import {
     showRecentlyUsedProjects,
     showsPath,
     slidesOptions,
+    songLibrarySync,
     sorted,
     special,
     styles,
@@ -443,6 +444,10 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
     },
     contentProviderData: (v: any) => contentProviderData.set(v),
     obsData: (v: any) => obsData.set(v),
+    songLibrarySync: (v: any) => {
+        songLibrarySync.set(v)
+        if (v?.enabled) sendMain(Main.SONG_LIBRARY_SYNC_UPDATE, { enabled: true, ip: v.ip || "localhost", port: v.port || 3030 })
+    },
     effects: (a: any) => effects.set(a),
     deletedDefaults: (a: any) => deletedDefaults.set({ ...get(deletedDefaults), ...a })
 }

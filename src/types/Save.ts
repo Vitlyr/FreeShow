@@ -90,6 +90,7 @@ export type SaveListSettings =
     | "timecode"
     | "contentProviderData"
     | "obsData"
+    | "songLibrarySync"
 
 export interface SaveData {
     // SETTINGS

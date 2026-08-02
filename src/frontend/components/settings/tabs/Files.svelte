@@ -3,7 +3,7 @@
     import type { ContentProviderId } from "../../../../electron/contentProviders/base/types"
     import { Main } from "../../../../types/IPC/Main"
     import { requestMain, sendMain } from "../../../IPC/main"
-    import { activePopup, alertMessage, autosave, cloudSyncData, dataPath, driveData, driveKeys, providerConnections, saved, special, statusIndicator } from "../../../stores"
+    import { activePopup, alertMessage, autosave, cloudSyncData, dataPath, driveData, driveKeys, providerConnections, saved, songLibrarySync, special, statusIndicator } from "../../../stores"
     import { changeTeam, setupCloudSync, socketDisconnect, updateCloudDeviceName } from "../../../utils/cloudSync"
     import { previousAutosave, startAutosave, wait } from "../../../utils/common"
     import { validateKeys } from "../../../utils/drive"
@@ -18,6 +18,7 @@
     import MaterialDropdown from "../../inputs/MaterialDropdown.svelte"
     import MaterialMediaPicker from "../../inputs/MaterialFilePicker.svelte"
     import MaterialFolderPicker from "../../inputs/MaterialFolderPicker.svelte"
+    import MaterialNumberInput from "../../inputs/MaterialNumberInput.svelte"
     import MaterialTextInput from "../../inputs/MaterialTextInput.svelte"
     import MaterialToggleSwitch from "../../inputs/MaterialToggleSwitch.svelte"
 
@@ -249,6 +250,21 @@
     //     console.log(1)
     // }
 
+    // SONG LIBRARY SYNC
+
+    let songLibraryIp = $songLibrarySync.ip || "localhost"
+    let songLibraryPort = $songLibrarySync.port || 3030
+    $: if (songLibraryIp || songLibraryPort) {
+        songLibrarySync.update((d) => ({ ...d, ip: songLibraryIp, port: songLibraryPort }))
+        if ($songLibrarySync.enabled) sendMain(Main.SONG_LIBRARY_SYNC_UPDATE, { enabled: true, ip: songLibraryIp, port: songLibraryPort })
+    }
+
+    function toggleSongLibrarySync(e: any) {
+        const enabled = e.detail
+        songLibrarySync.update((a) => ({ ...a, enabled }))
+        sendMain(Main.SONG_LIBRARY_SYNC_UPDATE, { enabled, ip: songLibraryIp, port: songLibraryPort })
+    }
+
     let bundled = false
     async function toggleMediaFolder(e: any) {
         updateSpecial(e.detail, "cloudSyncMediaFolder")
@@ -270,6 +286,24 @@
 <MaterialDropdown label="settings.auto_backup{autoBackupInfo}" value={autoBackup} defaultValue="weekly" options={autobackupList} on:change={(e) => updateSpecial(e.detail, "autoBackup")} />
 
 <MaterialFolderPicker label="settings.data_location" value={$dataPath} on:change={updateDataPath} />
+
+<!-- Song Library -->
+<Title label="Song Library" icon="music" />
+
+<InputRow arrow={$songLibrarySync.enabled}>
+    <MaterialToggleSwitch
+        label="Enable Song Library"
+        style="width: 100%;"
+        checked={$songLibrarySync.enabled === true}
+        defaultValue={false}
+        on:change={toggleSongLibrarySync}
+    />
+
+    <div slot="menu">
+        <MaterialTextInput label="IP" value={songLibraryIp} defaultValue="localhost" placeholder="localhost" on:change={(e) => (songLibraryIp = e.detail)} />
+        <MaterialNumberInput label="settings.port" value={songLibraryPort} defaultValue={3030} placeholder="3030" on:change={(e) => (songLibraryPort = e.detail)} />
+    </div>
+</InputRow>
 
 <!-- DEPRECATED -->
 <!-- shows path should be a "Shows" folder inside of "Data location" -->

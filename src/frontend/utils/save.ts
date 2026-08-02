@@ -85,6 +85,7 @@ import {
     showsCache,
     showsPath,
     slidesOptions,
+    songLibrarySync,
     sorted,
     special,
     splitLines,
@@ -193,7 +194,8 @@ export function save(closeWhenFinished = false, customTriggers: SaveActions = {}
         timeline: get(timeline),
         timecode: get(timecode),
         contentProviderData: get(contentProviderData),
-        obsData: get(obsData)
+        obsData: get(obsData),
+        songLibrarySync: get(songLibrarySync)
     }
 
     const syncedSettings: { [key: string]: any } = {}
