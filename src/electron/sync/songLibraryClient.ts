@@ -203,7 +203,7 @@ async function handleSongUpsert(payload: { id: string; show: [string, Show] }) {
     const [id, show] = payload.show
     if (!(await applySongUpsert(id, show))) return
 
-    refreshShows([show.name])
+    await refreshShows([show.name])
 }
 
 async function handleSongDelete(payload: { id: string }) {
@@ -215,11 +215,25 @@ async function handleSongDelete(payload: { id: string }) {
     const filePath = path.join(showsPath, local.name + ".show")
     if (doesPathExist(filePath)) await deleteFileAsync(filePath)
 
-    refreshShows([])
+    await refreshShows([])
 }
 
-function refreshShows(changedNames: string[]) {
-    loadShows(false, changedNames)
+// loadShows() itself is synchronous (a single call blocks for its entire
+// duration, same class of problem as the writes above) and, per song
+// actually being refreshed, re-reads and re-parses that file from disk even
+// though we already have its full content in memory from this same
+// full_sync payload — necessary because it also rebuilds the trimmed
+// metadata cache other parts of the app read, which this module has no
+// other way to update. Calling it in small batches with a yield between
+// each keeps any single blocking call short instead of one call blocking
+// for the size of the entire changed set.
+const REFRESH_BATCH_SIZE = 100
+
+async function refreshShows(changedNames: string[]) {
+    for (let i = 0; i < changedNames.length; i += REFRESH_BATCH_SIZE) {
+        loadShows(false, changedNames.slice(i, i + REFRESH_BATCH_SIZE))
+        await new Promise((resolve) => setImmediate(resolve))
+    }
     if (_store.SHOWS) sendMain(Main.SHOWS, _store.SHOWS.store)
 }
 
@@ -253,11 +267,22 @@ async function handleProjectDelete(payload: { id: string }) {
 // ----- FULL SYNC -----
 
 async function handleFullSync(payload: { songs?: [string, Show][]; projects?: { projects: Projects; folders: Folders; projectTemplates: Projects } }) {
+    // Timed explicitly (not just "did it freeze or not") so a slow full_sync
+    // reported in the future points straight at which phase is actually
+    // responsible instead of requiring another guess-fix-rebuild round trip.
+    const totalSongs = payload?.songs?.length || 0
+    const tWriteStart = Date.now()
     const changedNames: string[] = []
     for (const [id, show] of payload?.songs || []) {
         if (await applySongUpsert(id, show)) changedNames.push(show.name)
     }
-    if (changedNames.length) refreshShows(changedNames)
+    console.log(`songLibraryClient: full_sync wrote ${changedNames.length}/${totalSongs} songs in ${Date.now() - tWriteStart}ms`)
+
+    if (changedNames.length) {
+        const tRefreshStart = Date.now()
+        await refreshShows(changedNames)
+        console.log(`songLibraryClient: full_sync refreshed shows cache (${changedNames.length} names) in ${Date.now() - tRefreshStart}ms`)
+    }
 
     if (payload?.projects) {
         const data = currentProjectsData()
