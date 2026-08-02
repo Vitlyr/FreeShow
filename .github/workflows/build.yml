@@ -21,7 +21,18 @@ jobs:
             # grandiose/macadam native builds — pinned to windows-2022 to
             # match the known-working runner release.yml already uses.
             windows-2022,
-            macos-latest,
+            # macos-latest (Apple Silicon) fails packaging outright: "code
+            # has no resources but signature indicates they must be
+            # present". This project's asarUnpack (macadam/libspotifyctl
+            # native modules) adds files to the bundle after Electron's own
+            # prebuilt ad-hoc seal, invalidating it — arm64 requires a valid
+            # signature to even run, so electron-builder's post-build
+            # verification hard-fails. CSC_IDENTITY_AUTO_DISCOVERY=false
+            # didn't help (confirmed by testing — same failure). Intel
+            # runners don't enforce a valid signature the same way, so
+            # macos-13 sidesteps the issue entirely for this unsigned dev
+            # build.
+            macos-13,
             ubuntu-latest
           ]
 
