@@ -34,3 +34,21 @@ jobs:
 
       - name: Build app
         run: npm run build
+
+      # `npm run build` only compiles the source (frontend/electron/servers)
+      # — it never invokes electron-builder, so on its own there's nothing
+      # installable to download. `npm run release` does invoke it, but
+      # requires Windows/macOS code-signing secrets (Azure Trusted Signing,
+      # Apple notarization) that aren't configured on this fork and would
+      # fail here. `pack` (--dir mode) assembles a real, runnable app
+      # folder via electron-builder without building an installer or
+      # attempting to sign anything, so it works with no extra setup.
+      - name: Package app (unsigned, unpacked)
+        run: npm run pack
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: freeshow-${{ matrix.os }}
+          path: dist/
+          retention-days: 7
