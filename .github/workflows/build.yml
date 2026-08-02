@@ -7,6 +7,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
+      # one platform failing shouldn't cancel the others mid-build — this is
+      # exactly what happened when macOS's codesign step failed and GitHub's
+      # default fail-fast killed the still-running Windows job before it
+      # ever got a chance to finish.
+      fail-fast: false
       matrix:
         os:
           [
@@ -41,10 +46,18 @@ jobs:
       # requires Windows/macOS code-signing secrets (Azure Trusted Signing,
       # Apple notarization) that aren't configured on this fork and would
       # fail here. `pack` (--dir mode) assembles a real, runnable app
-      # folder via electron-builder without building an installer or
-      # attempting to sign anything, so it works with no extra setup.
+      # folder via electron-builder without building an installer, and
+      # normally skips signing entirely with no cert configured — except on
+      # macOS, which still auto-applies an ad-hoc self-signature (required
+      # for arm64 to even run) and that step failed outright on the
+      # macos-latest (Apple Silicon) runner: "code has no resources but
+      # signature indicates they must be present". CSC_IDENTITY_AUTO_DISCOVERY
+      # =false turns off electron-builder's signing pass altogether,
+      # including that ad-hoc fallback.
       - name: Package app (unsigned, unpacked)
         run: npm run pack
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
