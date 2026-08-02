@@ -128,6 +128,18 @@ function send(socket: WebSocket, type: string, payload: any) {
     socket.send(JSON.stringify({ v: 1, type, payload }))
 }
 
+// Called by the IPC handler for Main.SONG_LIBRARY_SYNC_OUTBOUND (see
+// responsesMain.ts) — a FreeShow-originated edit, detected by the renderer's
+// songLibraryOutbound.ts, forwarded here to go out over the current
+// connection. A silent no-op while disconnected/disabled, same as any other
+// send() call — the web app is the source of truth, so a change made while
+// disconnected simply stays local until the next edit is made while
+// connected (full two-way reconciliation on reconnect is a later step).
+export function sendOutbound(type: string, payload: any) {
+    if (!ws) return
+    send(ws, type, payload)
+}
+
 async function handleMessage(msg: Envelope) {
     if (!msg || typeof msg.type !== "string") return
     switch (msg.type) {

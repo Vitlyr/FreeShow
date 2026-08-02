@@ -89,6 +89,7 @@ import { newToast } from "../utils/common"
 import { confirmCustom } from "../utils/popup"
 import { initializeClosing, saveComplete } from "../utils/save"
 import { invalidateSearchIndex } from "../utils/searchFast"
+import { withExternalUpdate } from "../utils/songLibraryOutbound"
 import { updateSettings, updateSyncedSettings, updateThemeValues } from "../utils/updateSettings"
 import type { MainReturnPayloads } from "./../../types/IPC/Main"
 import { Main } from "./../../types/IPC/Main"
@@ -105,30 +106,34 @@ export const mainResponses: MainResponses = {
     [Main.SETTINGS]: (a) => updateSettings(a),
     [Main.SYNCED_SETTINGS]: (a) => updateSyncedSettings(a),
     [Main.SHOWS]: async (a) => {
-        const difference = Object.keys(a).length - Object.keys(get(shows)).length
-        if (difference < 15 && Object.keys(get(shows)).length && difference > 0) {
-            // get new shows & cache their content
-            const newShowIds = Object.keys(a).filter((id) => !get(shows)[id])
-            await loadShows(newShowIds)
-            newShowIds.forEach((id) => saveTextCache(id, get(showsCache)[id]))
-        }
+        await withExternalUpdate(async () => {
+            const difference = Object.keys(a).length - Object.keys(get(shows)).length
+            if (difference < 15 && Object.keys(get(shows)).length && difference > 0) {
+                // get new shows & cache their content
+                const newShowIds = Object.keys(a).filter((id) => !get(shows)[id])
+                await loadShows(newShowIds)
+                newShowIds.forEach((id) => saveTextCache(id, get(showsCache)[id]))
+            }
 
-        shows.set(a)
+            shows.set(a)
+        })
     },
     [Main.STAGE]: (a) => stageShows.set(a),
     [Main.PROJECTS]: (a) => {
-        const projectsList = a.projects || {}
+        withExternalUpdate(() => {
+            const projectsList = a.projects || {}
 
-        // remove "Mark as played" on startup
-        Object.values(projectsList).forEach((project) => {
-            project?.shows?.forEach((item) => {
-                delete item.played
+            // remove "Mark as played" on startup
+            Object.values(projectsList).forEach((project) => {
+                project?.shows?.forEach((item) => {
+                    delete item.played
+                })
             })
-        })
 
-        projects.set(projectsList)
-        folders.set(a.folders || {})
-        projectTemplates.set(a.projectTemplates || {})
+            projects.set(projectsList)
+            folders.set(a.folders || {})
+            projectTemplates.set(a.projectTemplates || {})
+        })
     },
     [Main.OVERLAYS]: (a) => overlays.set(a),
     [Main.TEMPLATES]: (a) => templates.set(a),

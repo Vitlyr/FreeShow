@@ -16,6 +16,7 @@ import { autoOpenLastUsedProfile, openProfileByName } from "./profile"
 import { receiveOUTPUTasOUTPUT, remoteListen, setupMainReceivers } from "./receivers"
 import { destroy, receive, send } from "./request"
 import { save, unsavedUpdater } from "./save"
+import { startSongLibraryOutbound } from "./songLibraryOutbound"
 
 let initialized = false
 let startupProfile = ""
@@ -67,6 +68,7 @@ async function startupMain() {
     else autoOpenLastUsedProfile()
 
     storeSubscriber()
+    startSongLibraryOutbound()
     remoteListen()
     checkStartupActions()
     startTracking()

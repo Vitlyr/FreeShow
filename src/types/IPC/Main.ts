@@ -115,6 +115,7 @@ export enum Main {
     WEBSOCKET_START = "WEBSOCKET_START",
     WEBSOCKET_STOP = "WEBSOCKET_STOP",
     SONG_LIBRARY_SYNC_UPDATE = "SONG_LIBRARY_SYNC_UPDATE",
+    SONG_LIBRARY_SYNC_OUTBOUND = "SONG_LIBRARY_SYNC_OUTBOUND",
     API_TRIGGER = "API_TRIGGER",
     EMIT_OSC = "EMIT_OSC",
     GET_MIDI_OUTPUTS = "GET_MIDI_OUTPUTS",
@@ -220,6 +221,7 @@ export interface MainSendPayloads {
     [Main.SERVER_DATA]: { [key: string]: any }
     [Main.WEBSOCKET_START]: number
     [Main.SONG_LIBRARY_SYNC_UPDATE]: { enabled: boolean; ip: string; port: number }
+    [Main.SONG_LIBRARY_SYNC_OUTBOUND]: { type: "song_upsert" | "song_delete" | "project_upsert" | "project_delete"; payload: any }
     [Main.API_TRIGGER]: { action: string; returnId: string; data: any }
     [Main.EMIT_OSC]: { signal: any; data: any }
     [Main.GET_MIDI_OUTPUTS]: string[]

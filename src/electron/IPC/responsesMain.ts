@@ -24,7 +24,7 @@ import { OutputHelper } from "../output/OutputHelper"
 import { libreConvert } from "../output/ppt/libreConverter"
 import { getPresentationApplications, presentationControl, startSlideshow } from "../output/ppt/presentation"
 import { closeServers, startServers, updateServerData } from "../servers"
-import { updateSongLibrarySync } from "../sync/songLibraryClient"
+import { sendOutbound, updateSongLibrarySync } from "../sync/songLibraryClient"
 import { processAudioData, timecodeStart, timecodeStop, updateTimecodeValue } from "../timecode/timecode"
 import { apiReturnData, emitOSC, startWebSocketAndRest, stopApiListener } from "../utils/api"
 import { closeMain } from "../utils/close"
@@ -143,6 +143,7 @@ export const mainResponses: MainResponses = {
     [Main.WEBSOCKET_START]: (port) => startWebSocketAndRest(port),
     [Main.WEBSOCKET_STOP]: () => stopApiListener(),
     [Main.SONG_LIBRARY_SYNC_UPDATE]: (data) => updateSongLibrarySync(data),
+    [Main.SONG_LIBRARY_SYNC_OUTBOUND]: (data) => sendOutbound(data.type, data.payload),
     [Main.API_TRIGGER]: (data) => apiReturnData(data),
     [Main.EMIT_OSC]: (data) => emitOSC(data),
     // MIDI
