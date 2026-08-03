@@ -1536,7 +1536,9 @@
         "reference_at_bottom": "Move to bottom",
         "red_jesus": "Jesus words in red",
         "show_all": "Show all",
-        "search": "Search in the Bible"
+        "search": "Search in the Bible",
+        "old_testament": "Old Testament",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Blur",

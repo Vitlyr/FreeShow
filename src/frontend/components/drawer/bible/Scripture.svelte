@@ -200,6 +200,13 @@
     // category color / abbreviation data
     $: booksData = currentBibleData?.bibleData?.getBooksData() || []
 
+    // Old/New Testament section boundary - derived from the bible's own
+    // getOT() rather than a bare index check, since book count can exceed
+    // 66 (apocrypha) or be a single-testament collection, where no split
+    // should be shown at all.
+    $: otBookCount = currentBibleData?.bibleData?.getOT()?.length || 0
+    $: showTestamentSections = otBookCount > 0 && otBookCount < (books?.length || 0)
+
     // Check if any translation in collection supports splitting for verses
     function checkCollectionSplitSupport(): { [verseNumber: number]: number } {
         if (!isCollection || !$scriptureSettings.splitLongVerses || !verses) return {}
@@ -1057,6 +1064,11 @@
                                 {@const name = $scriptureMode === "grid" ? booksData[i]?.abbreviation : $customScriptureBooks[previewBibleId]?.[i] || book.name}
                                 {@const isActive = activeReference.book?.toString() === id}
 
+                                {#if showTestamentSections && i === 0}
+                                    <span class="testamentSection"><T id="scripture.old_testament" /></span>
+                                {:else if showTestamentSections && i === otBookCount}
+                                    <span class="testamentSection"><T id="scripture.new_testament" /></span>
+                                {/if}
                                 <span {id} class={isApi || isCollection || !Object.values(defaultBibleBookNames).includes(book.name) ? "" : "context #bible_book_local"} class:isActive style="{color ? `border-${$scriptureMode === 'grid' ? 'bottom' : 'left'}: 2px solid ${color};` : ''}{$scriptureMode === 'grid' ? `border-radius: 2px;background-color: ${fadeColor(color, 0.15)};color: ${brightenDarkColor(color)};` : ''}" on:click={() => openBook(id)} role="none">
                                     {name}
                                 </span>
@@ -1365,6 +1377,19 @@
         opacity: 0.7;
         font-size: 0.8em;
         font-style: italic;
+    }
+
+    .testamentSection {
+        display: block;
+        width: 100%;
+        flex: 0 0 100%; /* force a line break when wrapped inside GRID mode's flex-wrap row */
+        padding: 6px 10px 2px;
+        font-size: 0.75em;
+        font-weight: bold;
+        text-transform: uppercase;
+        opacity: 0.6;
+        cursor: default;
+        pointer-events: none;
     }
 
     /* LIST MODE */
