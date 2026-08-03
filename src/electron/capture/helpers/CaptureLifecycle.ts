@@ -91,6 +91,7 @@ export class CaptureLifecycle {
 
         const captureFrame = async () => {
             const captureOpts = output.captureOptions
+            const frameStart = performance.now()
 
             if (!this.shouldContinueCapture(id, token, captureOpts)) {
                 this.activeCaptures.delete(id)
@@ -117,7 +118,17 @@ export class CaptureLifecycle {
                 return
             }
 
-            const delay = this.calculateFrameDelay(id, captureOpts)
+            // subtract how long capturePage()+processing actually took, so the
+            // achieved rate tracks the target instead of drifting below it by
+            // that overhead every single cycle (e.g. a 33ms/30fps target plus
+            // a 15ms capture call settles at ~21fps, not 30). This matters
+            // beyond raw throughput: NDI receivers (vMix, OBS-NDI, etc.)
+            // watch for how consistently frames actually arrive and apply
+            // extra internal buffering to smooth out jitter, which is a
+            // common real-world cause of NDI feeling laggy even when no
+            // single frame is late by much.
+            const elapsed = performance.now() - frameStart
+            const delay = this.calculateFrameDelay(id, captureOpts, elapsed)
             captureOpts.frameSubscription = setTimeout(captureFrame, delay)
         }
 
@@ -153,14 +164,14 @@ export class CaptureLifecycle {
         CaptureTransmitter.transmitFrame(id, image, performance.now())
     }
 
-    private static calculateFrameDelay(id: string, captureOpts: any): number {
+    private static calculateFrameDelay(id: string, captureOpts: any, elapsedMs = 0): number {
         const output = OutputHelper.getOutput(id)
         if (!output?.captureOptions) return this.MIN_DELAY_MS
 
         const captureFrameRate = this.getAdaptiveFrameRate(id, captureOpts)
         const targetIntervalMs = 1000 / captureFrameRate
 
-        return Math.max(this.MIN_DELAY_MS, Math.round(targetIntervalMs))
+        return Math.max(this.MIN_DELAY_MS, Math.round(targetIntervalMs - elapsedMs))
     }
 
     private static getAdaptiveFrameRate(id: string, captureOpts: any): number {

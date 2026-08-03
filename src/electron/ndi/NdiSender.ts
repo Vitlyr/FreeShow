@@ -38,7 +38,13 @@ export class NdiSender {
     private static readonly BYTES_PER_PIXEL = 4
     private static readonly BYTES_PER_FLOAT32 = 4
     private static readonly PADDING_ALIGNMENT = 16
-    private static readonly CONNECTION_POLL_INTERVAL_MS = 1000
+    // capture throttles to 1fps while unconnected (see CaptureHelper.updateFramerate)
+    // and only ramps back up to full rate once this poll notices a receiver -
+    // was 1000ms, meaning up to ~2s of stale 1fps video after every (re)connect
+    // (the poll delay itself, plus up to one more stale-rate capture interval
+    // before the loop picks up the new target). Polling connections() is a
+    // cheap getter call, so tightening this has no meaningful CPU cost.
+    private static readonly CONNECTION_POLL_INTERVAL_MS = 250
     private static readonly TIMECODE_DIVISOR = BigInt(100)
 
     static timeStart = BigInt(Date.now()) * BigInt(1e6) - process.hrtime.bigint()
