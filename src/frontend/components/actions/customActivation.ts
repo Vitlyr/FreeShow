@@ -14,12 +14,11 @@ export const customActionActivations = [
 
     { id: "show_created", name: "actions.activate_show_created", icon: "slide" },
     { id: "show_opened", name: "actions.activate_show_opened", icon: "slide" },
-    // Fires when a show is selected from the Schedule/running-order
-    // (ShowButton.svelte, isProject) - i.e. it's about to be presented next.
-    // "show_opened" fires on that same activeShow.set() too, but also fires
-    // from the Drawer's show library (browsing/searching), which isn't a
-    // meaningful "starting" event - this trigger is scoped to Schedule
-    // selection only so it doesn't fire on plain browsing.
+    // Fires the moment a show's slide actually gets displayed on output and
+    // that show wasn't already the one showing - i.e. a genuinely new show
+    // going live, not a continuation/advance within the same show that's
+    // already on screen, and not just selecting/opening it beforehand. See
+    // setOutput() in helpers/output.ts.
     { id: "show_start", common: true, name: "actions.activate_show_start", icon: "slide" },
     { id: "slide_click", name: "actions.activate_slide_clicked", icon: "slide" },
     { id: "group_start", common: true, name: "actions.activate_group_start", icon: "groups", inputs: true },
