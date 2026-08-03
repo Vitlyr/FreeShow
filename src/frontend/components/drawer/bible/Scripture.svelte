@@ -1055,24 +1055,53 @@
         {:else}
             <!-- LIST/GRID MODE -->
             <div class={$scriptureMode === "grid" ? "grid" : "list"}>
-                <div class="books" bind:this={booksScrollElem} class:center={!books?.length}>
+                <div class="books" class:testamentSplit={showTestamentSections} bind:this={booksScrollElem} class:center={!books?.length}>
                     {#if books?.length}
                         {#key books}
-                            {#each books as book, i}
-                                {@const id = book.number?.toString()}
-                                {@const color = booksData[i]?.category?.color || ""}
-                                {@const name = $scriptureMode === "grid" ? booksData[i]?.abbreviation : $customScriptureBooks[previewBibleId]?.[i] || book.name}
-                                {@const isActive = activeReference.book?.toString() === id}
+                            {#if showTestamentSections}
+                                <div class="testamentColumn">
+                                    <p class="testamentColumnHeader"><T id="scripture.old_testament" /></p>
+                                    <div class="testamentColumnBooks">
+                                        {#each books.slice(0, otBookCount) as book, i}
+                                            {@const id = book.number?.toString()}
+                                            {@const color = booksData[i]?.category?.color || ""}
+                                            {@const name = $scriptureMode === "grid" ? booksData[i]?.abbreviation : $customScriptureBooks[previewBibleId]?.[i] || book.name}
+                                            {@const isActive = activeReference.book?.toString() === id}
 
-                                {#if showTestamentSections && i === 0}
-                                    <span class="testamentSection"><T id="scripture.old_testament" /></span>
-                                {:else if showTestamentSections && i === otBookCount}
-                                    <span class="testamentSection"><T id="scripture.new_testament" /></span>
-                                {/if}
-                                <span {id} class={isApi || isCollection || !Object.values(defaultBibleBookNames).includes(book.name) ? "" : "context #bible_book_local"} class:isActive style="{color ? `border-${$scriptureMode === 'grid' ? 'bottom' : 'left'}: 2px solid ${color};` : ''}{$scriptureMode === 'grid' ? `border-radius: 2px;background-color: ${fadeColor(color, 0.15)};color: ${brightenDarkColor(color)};` : ''}" on:click={() => openBook(id)} role="none">
-                                    {name}
-                                </span>
-                            {/each}
+                                            <span {id} class={isApi || isCollection || !Object.values(defaultBibleBookNames).includes(book.name) ? "" : "context #bible_book_local"} class:isActive style="{color ? `border-${$scriptureMode === 'grid' ? 'bottom' : 'left'}: 2px solid ${color};` : ''}{$scriptureMode === 'grid' ? `border-radius: 2px;background-color: ${fadeColor(color, 0.15)};color: ${brightenDarkColor(color)};` : ''}" on:click={() => openBook(id)} role="none">
+                                                {name}
+                                            </span>
+                                        {/each}
+                                    </div>
+                                </div>
+                                <div class="testamentColumn">
+                                    <p class="testamentColumnHeader"><T id="scripture.new_testament" /></p>
+                                    <div class="testamentColumnBooks">
+                                        {#each books.slice(otBookCount) as book, i}
+                                            {@const absIndex = otBookCount + i}
+                                            {@const id = book.number?.toString()}
+                                            {@const color = booksData[absIndex]?.category?.color || ""}
+                                            {@const name = $scriptureMode === "grid" ? booksData[absIndex]?.abbreviation : $customScriptureBooks[previewBibleId]?.[absIndex] || book.name}
+                                            {@const isActive = activeReference.book?.toString() === id}
+
+                                            <span {id} class={isApi || isCollection || !Object.values(defaultBibleBookNames).includes(book.name) ? "" : "context #bible_book_local"} class:isActive style="{color ? `border-${$scriptureMode === 'grid' ? 'bottom' : 'left'}: 2px solid ${color};` : ''}{$scriptureMode === 'grid' ? `border-radius: 2px;background-color: ${fadeColor(color, 0.15)};color: ${brightenDarkColor(color)};` : ''}" on:click={() => openBook(id)} role="none">
+                                                {name}
+                                            </span>
+                                        {/each}
+                                    </div>
+                                </div>
+                            {:else}
+                                {#each books as book, i}
+                                    {@const id = book.number?.toString()}
+                                    {@const color = booksData[i]?.category?.color || ""}
+                                    {@const name = $scriptureMode === "grid" ? booksData[i]?.abbreviation : $customScriptureBooks[previewBibleId]?.[i] || book.name}
+                                    {@const isActive = activeReference.book?.toString() === id}
+
+                                    <span {id} class={isApi || isCollection || !Object.values(defaultBibleBookNames).includes(book.name) ? "" : "context #bible_book_local"} class:isActive style="{color ? `border-${$scriptureMode === 'grid' ? 'bottom' : 'left'}: 2px solid ${color};` : ''}{$scriptureMode === 'grid' ? `border-radius: 2px;background-color: ${fadeColor(color, 0.15)};color: ${brightenDarkColor(color)};` : ''}" on:click={() => openBook(id)} role="none">
+                                        {name}
+                                    </span>
+                                {/each}
+                            {/if}
                         {/key}
                     {:else}
                         <Loader />
@@ -1379,17 +1408,42 @@
         font-style: italic;
     }
 
-    .testamentSection {
-        display: block;
-        width: 100%;
-        flex: 0 0 100%; /* force a line break when wrapped inside GRID mode's flex-wrap row */
+    /* Old/New Testament side-by-side columns */
+    .books.testamentSplit {
+        flex-direction: row !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+    }
+    .testamentColumn {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden !important;
+        border-inline-end: none !important;
+    }
+    .testamentColumn:first-child {
+        border-inline-end: 2px solid var(--primary-lighter) !important;
+    }
+    .testamentColumnHeader {
+        flex: none;
+        margin: 0;
         padding: 6px 10px 2px;
         font-size: 0.75em;
         font-weight: bold;
         text-transform: uppercase;
         opacity: 0.6;
+        text-align: center;
         cursor: default;
-        pointer-events: none;
+    }
+    .testamentColumnBooks {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        border-inline-end: none !important;
+    }
+    .grid .testamentColumnBooks {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-content: flex-start;
     }
 
     /* LIST MODE */
