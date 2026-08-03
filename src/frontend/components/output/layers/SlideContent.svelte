@@ -233,12 +233,22 @@
         const transitioningItems: Item[] = []
         const transitioningIndexes: number[] = []
 
+        // between (computed early - needed below to decide persistence)
+        const isDifferentSlide = current.currentSlide?.id !== currentSlide?.id || current.outSlide?.index !== outSlide?.index || current.outSlide?.id !== outSlide?.id
+
         // First, check if ANY item on the slide has a real transition
-        // If so, all items should animate together (no persistent items)
-        const slideHasAnyTransition = currentSlide.items.some((item: Item) => {
-            const itemTrans = item.actions?.transition
-            return hasRealTransition(itemTrans, currentTransition)
-        })
+        // If so, all items should animate together (no persistent items) -
+        // but only when actually moving to a different slide. A line/reveal
+        // advance within the SAME slide (e.g. paging through a split verse)
+        // isn't a slide transition at all, so the configured slide transition
+        // must not apply there - otherwise every line-chunk advance replays
+        // the fade out/in, which is what caused the reported blinking.
+        const slideHasAnyTransition =
+            isDifferentSlide &&
+            currentSlide.items.some((item: Item) => {
+                const itemTrans = item.actions?.transition
+                return hasRealTransition(itemTrans, currentTransition)
+            })
 
         currentSlide.items.forEach((newItem: Item, newIndex: number) => {
             // Find matching old item by index (position-based matching for slides)
@@ -246,8 +256,8 @@
 
             // Item is persistent only if:
             // 1. Content is unchanged AND
-            // 2. No real transition on this item AND
-            // 3. No other item on the slide has a transition (so whole slide animates together)
+            // 2. No real transition applies (never applies for a same-slide
+            //    line/reveal advance, only for an actual slide change)
             if (itemsAreEqual(oldItem, newItem) && !slideHasAnyTransition) {
                 newPersistentIndexes.push(newIndex)
                 newPersistentItems.push(clone(newItem))
@@ -262,9 +272,27 @@
         persistentItemIndexes = newPersistentIndexes
         persistentItems = newPersistentItems
 
-        // between
-        const isDifferentSlide = current.currentSlide?.id !== currentSlide?.id || current.outSlide?.index !== outSlide?.index || current.outSlide?.id !== outSlide?.id
         if (isDifferentSlide && currentItems.length && currentSlide.items.length) transitioningBetween = true
+
+        // Nothing was previously shown, so there's nothing to transition
+        // "between" - going through the full out-wait + waitToShow stagger
+        // below just sits on a blank screen before the first slide finally
+        // pops in, which reads as a delayed blink rather than a clean
+        // fade-in. Reveal directly instead (SlideItemTransition below still
+        // applies its own fade-in via {show}).
+        if (!currentItems.length) {
+            currentItems = clone(currentSlide.items || [])
+            current = {
+                outSlide: clone(outSlide),
+                slideData: clone(slideData),
+                currentSlide: clone(currentSlide),
+                lines: clone(lines),
+                currentStyle: clone(currentStyle)
+            }
+            transitioningBetween = false
+            show = true
+            return
+        }
 
         if (timeout) clearTimeout(timeout)
 
