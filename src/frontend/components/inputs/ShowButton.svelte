@@ -11,7 +11,8 @@
     import { encodeFilePath, getExtension, getFileName, getMedia, getMediaLayerType, getMediaStyle, getMediaType, getVideoDuration, mediaSize, removeExtension } from "../helpers/media"
     import { findMatchingOut, getActiveOutputs, setOutput, startFolderTimer } from "../helpers/output"
     import { loadShows } from "../helpers/setShow"
-    import { checkName, getLayoutRef } from "../helpers/show"
+    import { checkName } from "../helpers/show"
+    import { _show } from "../helpers/shows"
     import { swichProjectItem, updateOut } from "../helpers/showActions"
     import T from "../helpers/T.svelte"
     import { joinTime, secondsToTime } from "../helpers/time"
@@ -154,15 +155,22 @@
         let outputId: string = getActiveOutputs($outputs, false, true, true)[0]
         let currentOutput = $outputs[outputId] || {}
 
-        if (type === "show" && $showsCache[id]?.settings && $showsCache[id].layouts[$showsCache[id].settings.activeLayout]?.slides?.length) {
-            let layoutRef = getLayoutRef()
+        // the schedule item's own layout override (show.layout) wins over the
+        // show's globally cached last-used layout - reading it directly here
+        // instead of relying on showsCache[id].settings.activeLayout being
+        // pre-synced by the single-click handler's deferred setTimeout
+        // (project.ts), which is racy: double-clicking before that timeout
+        // fires plays the wrong (stale/default) layout.
+        const layoutId = show.layout || $showsCache[id]?.settings?.activeLayout
+        if (type === "show" && $showsCache[id]?.settings && $showsCache[id].layouts[layoutId]?.slides?.length) {
+            let layoutRef = _show(id).layouts([layoutId]).ref()[0] || []
             let firstEnabledIndex = layoutRef.findIndex((a) => !a.data.disabled)
             updateOut("active", firstEnabledIndex, layoutRef, !e.detail.alt)
 
             let slide = currentOutput.out?.slide || null
-            if (slide?.id === id && slide?.index === firstEnabledIndex && slide?.layout === $showsCache[id].settings.activeLayout) return
+            if (slide?.id === id && slide?.index === firstEnabledIndex && slide?.layout === layoutId) return
 
-            setOutput("slide", { id, layout: $showsCache[id].settings.activeLayout, index: firstEnabledIndex })
+            setOutput("slide", { id, layout: layoutId, index: firstEnabledIndex })
         } else if (type === "image" || type === "video") {
             let outputStyle = $styles[currentOutput.style || ""]
             const mediaData = $media[id] || {}

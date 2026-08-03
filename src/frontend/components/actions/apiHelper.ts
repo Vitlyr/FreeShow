@@ -133,15 +133,20 @@ export async function startProjectItemByName(name: string) {
     let currentOutput = get(outputs)[outputId] || {}
 
     // WIP duplicate of ShowButton.svelte doubleClick() & missing other types
-    if ((item.type || "show") === "show" && get(showsCache)[item.id]?.settings && get(showsCache)[item.id].layouts[get(showsCache)[item.id].settings.activeLayout]?.slides?.length) {
-        let layoutRef = getLayoutRef()
+    // item.layout (the schedule item's own layout override) wins over the
+    // show's globally cached last-used layout - see ShowButton.svelte's
+    // doubleClick() for why reading it directly here (rather than via
+    // showsCache[item.id].settings.activeLayout) matters.
+    const layoutId = item.layout || get(showsCache)[item.id]?.settings?.activeLayout
+    if ((item.type || "show") === "show" && get(showsCache)[item.id]?.settings && get(showsCache)[item.id].layouts[layoutId]?.slides?.length) {
+        let layoutRef = _show(item.id).layouts([layoutId]).ref()[0] || []
         let firstEnabledIndex = layoutRef.findIndex((a) => !a.data.disabled)
         updateOut("active", firstEnabledIndex, layoutRef)
 
         let slide = currentOutput.out?.slide || null
-        if (slide?.id === item.id && slide?.index === firstEnabledIndex && slide?.layout === get(showsCache)[item.id].settings.activeLayout) return
+        if (slide?.id === item.id && slide?.index === firstEnabledIndex && slide?.layout === layoutId) return
 
-        setOutput("slide", { id: item.id, layout: get(showsCache)[item.id].settings.activeLayout, index: firstEnabledIndex })
+        setOutput("slide", { id: item.id, layout: layoutId, index: firstEnabledIndex })
     } else if (item.type === "image" || item.type === "video") {
         let outputStyle = get(styles)[currentOutput.style || ""]
         const mediaData = get(media)[item.id] || {}
