@@ -124,7 +124,15 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
             const currentOutSlideId = get(outputs)[outs?.[0]]?.out?.slide?.id || ""
 
             // log usage if show is not currently outputted
-            if (currentOutSlideId !== data?.id) appendShowUsage(data.id)
+            if (currentOutSlideId !== data?.id) {
+                appendShowUsage(data.id)
+                // "show just became live" - deliberately not resetActionTrigger's
+                // condition below (that's specific to the category-action-override
+                // feature and would also fire this on a same-show slide advance,
+                // which is exactly the "continuation" case this trigger must not
+                // fire for)
+                customActionActivation("show_start")
+            }
 
             const overrideCategoryAction = ref[data?.index]?.data?.actions?.slideActions?.find((action) => Object.values(action.customData || {}).find((a1) => Object.entries(a1).find(([key, value]) => key === "overrideCategoryAction" && value === true)))
 

@@ -14,6 +14,13 @@ export const customActionActivations = [
 
     { id: "show_created", name: "actions.activate_show_created", icon: "slide" },
     { id: "show_opened", name: "actions.activate_show_opened", icon: "slide" },
+    // Fires only when a show transitions from not-live to live on its first
+    // slide - not on editor "show_opened" (a separate, unrelated path - see
+    // MainLayout.svelte's activeShow watcher) and not on advancing between
+    // slides/line-chunks within an already-live show. See setOutput() in
+    // helpers/output.ts, which already computes exactly this distinction
+    // for its own default-category-action logic.
+    { id: "show_start", common: true, name: "actions.activate_show_start", icon: "slide" },
     { id: "slide_click", name: "actions.activate_slide_clicked", icon: "slide" },
     { id: "group_start", common: true, name: "actions.activate_group_start", icon: "groups", inputs: true },
     { id: "pdf_start", name: "actions.activate_pdf_start", icon: "pdf" },
