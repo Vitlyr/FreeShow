@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
     import { uid } from "uid"
-    import { actionMoreOptionsUsed, actions, activePopup, activeShow, drawerTabsData, groups, overlays, popupData, showsCache, templates, timers } from "../../../stores"
+    import { actionMoreOptionsUsed, actions, activePopup, activeShow, drawerTabsData, groups, overlays, popupData, shows, showsCache, templates, timers } from "../../../stores"
     import { translateText } from "../../../utils/language"
     import { imageExtensions } from "../../../values/extensions"
     import CreateAction from "../../actions/CreateAction.svelte"
@@ -357,6 +357,10 @@
         group_start: {
             name: "actions.choose_group",
             list: () => sortByName(keysToID($groups)).map((a) => ({ value: a.id, label: a.default ? translateText("groups." + a.name) : a.name }))
+        },
+        show_start: {
+            name: "actions.choose_show",
+            list: () => sortByName(keysToID($shows)).map((a) => ({ value: a.id, label: a.name }))
         }
     }
     // .map((a) => ({ ...a, value: `${customActivation}__${a.value}` }))
@@ -503,7 +507,7 @@
                 />
 
                 <div slot="menu">
-                    {#if ["timer_end", "timer_start", "group_start"].includes(customActivation)}
+                    {#if ["timer_end", "timer_start", "group_start", "show_start"].includes(customActivation)}
                         <MaterialDropdown label={specificActivations[customActivation]?.name} options={getSpecificActivation(customActivation)} value={specificActivation} on:change={(e) => updateValue("specificActivation", `${customActivation}__${e.detail}`)} />
                     {:else if customActivation === "midi_signal_received"}
                         <MidiValues value={clone(action.midi || actionMidi)} firstActionId={action.triggers?.[0]} on:change={(e) => updateValue("midi", e)} simple />

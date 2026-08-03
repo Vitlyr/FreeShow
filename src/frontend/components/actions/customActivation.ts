@@ -19,7 +19,7 @@ export const customActionActivations = [
     // going live, not a continuation/advance within the same show that's
     // already on screen, and not just selecting/opening it beforehand. See
     // setOutput() in helpers/output.ts.
-    { id: "show_start", common: true, name: "actions.activate_show_start", icon: "slide" },
+    { id: "show_start", common: true, name: "actions.activate_show_start", icon: "slide", inputs: true },
     { id: "slide_click", name: "actions.activate_slide_clicked", icon: "slide" },
     { id: "group_start", common: true, name: "actions.activate_group_start", icon: "groups", inputs: true },
     { id: "pdf_start", name: "actions.activate_pdf_start", icon: "pdf" },

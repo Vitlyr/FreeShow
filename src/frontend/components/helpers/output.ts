@@ -129,8 +129,10 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
                 // "show just became live" - i.e. the slide that's about to be
                 // displayed belongs to a DIFFERENT show than whatever was
                 // previously on this output, not a continuation/advance
-                // within the same show that's already showing.
-                customActionActivation("show_start")
+                // within the same show that's already showing. Passing
+                // data.id lets an action scope itself to one specific show
+                // via specificActivation, instead of firing for every show.
+                customActionActivation("show_start", data.id)
             }
 
             const overrideCategoryAction = ref[data?.index]?.data?.actions?.slideActions?.find((action) => Object.values(action.customData || {}).find((a1) => Object.entries(a1).find(([key, value]) => key === "overrideCategoryAction" && value === true)))
