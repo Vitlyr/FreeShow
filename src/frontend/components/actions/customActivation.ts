@@ -14,12 +14,12 @@ export const customActionActivations = [
 
     { id: "show_created", name: "actions.activate_show_created", icon: "slide" },
     { id: "show_opened", name: "actions.activate_show_opened", icon: "slide" },
-    // Fires only when a show transitions from not-live to live on its first
-    // slide - not on editor "show_opened" (a separate, unrelated path - see
-    // MainLayout.svelte's activeShow watcher) and not on advancing between
-    // slides/line-chunks within an already-live show. See setOutput() in
-    // helpers/output.ts, which already computes exactly this distinction
-    // for its own default-category-action logic.
+    // Fires when a show is selected from the Schedule/running-order
+    // (ShowButton.svelte, isProject) - i.e. it's about to be presented next.
+    // "show_opened" fires on that same activeShow.set() too, but also fires
+    // from the Drawer's show library (browsing/searching), which isn't a
+    // meaningful "starting" event - this trigger is scoped to Schedule
+    // selection only so it doesn't fire on plain browsing.
     { id: "show_start", common: true, name: "actions.activate_show_start", icon: "slide" },
     { id: "slide_click", name: "actions.activate_slide_clicked", icon: "slide" },
     { id: "group_start", common: true, name: "actions.activate_group_start", icon: "groups", inputs: true },

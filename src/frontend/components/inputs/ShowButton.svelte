@@ -3,6 +3,7 @@
     import type { ClickEvent } from "../../../types/Main"
     import { AudioPlayer } from "../../audio/audioPlayer"
     import { activeEdit, activeFocus, activePage, activeProject, activeShow, categories, effects, focusMode, globalTags, media, notFound, outLocked, outputs, overlayCategories, overlays, playerVideos, playingAudio, projects, refreshEditSlide, shows, showsCache, special, styles } from "../../stores"
+    import { customActionActivation } from "../actions/actions"
     import { getAccess } from "../../utils/profile"
     import { customIconsColors } from "../../values/customIcons"
     import { historyAwait } from "../helpers/history"
@@ -131,6 +132,14 @@
         }
 
         activeShow.set(newShow)
+
+        // "show_start": selecting a show from the Schedule/running-order
+        // (isProject) means it's about to be presented, as opposed to the
+        // same activeShow.set() happening from the Drawer's show library
+        // (browsing/searching) - which only fires "show_opened". Both this
+        // and "show_opened" fire on this same click; this one is scoped to
+        // isProject so it doesn't fire on drawer browsing.
+        if (isProject && type === "show") customActionActivation("show_start")
 
         if (type === "image" || type === "video") activeEdit.set({ id, type: "media", items: [] })
         else if ($activeEdit.id) activeEdit.set({ type: "show", slide: 0, items: [], showId: $activeShow?.id })
