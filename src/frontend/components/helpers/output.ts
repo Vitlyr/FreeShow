@@ -168,6 +168,19 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
                 data = changeOutputBackground(data, { output, id, mute: allOutputIds.length > 1 && id !== backgroundId, videoOutputId: backgroundId })
             }
 
+            // drop overlay ids that are restricted to a different set of outputs -
+            // centralized here (rather than in each caller: overlayClick, actions,
+            // API/remote) so every activation path respects the restriction.
+            if (type === "overlays" && data) {
+                const overlayIds: string[] = Array.isArray(data) ? data : [data]
+                const allowedIds = overlayIds.filter((overlayId) => {
+                    const restrict = get(overlays)[overlayId]?.restrictToOutputs
+                    return !restrict?.length || restrict.includes(id)
+                })
+                if (!allowedIds.length) return
+                data = Array.isArray(data) ? allowedIds : allowedIds[0]
+            }
+
             let outData = a[id].out?.[type] || null
             if ((type === "overlays" || type === "effects") && data?.length) {
                 if (!Array.isArray(data)) data = [data]

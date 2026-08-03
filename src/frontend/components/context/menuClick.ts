@@ -1770,6 +1770,24 @@ const clickActions = {
     display_duration: () => {
         activePopup.set("display_duration")
     },
+    bind_overlay: (obj: ObjData) => {
+        if (obj.sel?.id !== "overlay") return
+        const outputId = obj.menu.id || ""
+        if (!outputId) return
+
+        overlays.update((a) => {
+            obj.sel!.data.forEach((id: string) => {
+                if (!a[id]) return
+                const restriction = a[id].restrictToOutputs || []
+                const index = restriction.indexOf(outputId)
+                if (index > -1) restriction.splice(index, 1)
+                else restriction.push(outputId)
+                a[id].restrictToOutputs = restriction
+                a[id].modified = Date.now()
+            })
+            return a
+        })
+    },
 
     // stage
     move_connections: (obj: ObjData) => {

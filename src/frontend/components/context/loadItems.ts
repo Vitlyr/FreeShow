@@ -360,7 +360,24 @@ const loadActions = {
 
         return contextOutputList
     },
-    bind_item: () => loadActions.bind_slide([], true)
+    bind_item: () => loadActions.bind_slide([], true),
+    // restrict which outputs an overlay is allowed to activate on - mirrors
+    // bind_slide's output list/checkbox pattern, but stored on the overlay
+    // itself (restrictToOutputs) rather than per-slide/item bindings, since
+    // it needs to apply however the overlay gets activated (drawer click,
+    // action, API/remote), not just from one editor context.
+    bind_overlay: () => {
+        const outputList: any[] = sortByName(keysToID(get(outputs)).filter((a) => !a.stageOutput))
+        const contextOutputList: (ContextMenuItem | "SEPARATOR")[] = outputList.map((a) => ({ id: a.id, label: a.name, translate: false }))
+
+        const overlayId: string = get(selected).data[0] || ""
+        const currentRestriction: string[] = (overlayId && get(overlays)[overlayId]?.restrictToOutputs) || []
+
+        return contextOutputList.map((a) => {
+            if (typeof a !== "string" && currentRestriction.includes(a.id!)) a.enabled = true
+            return a
+        })
+    }
 }
 
 function setContextData(key: string, data: boolean | string | number) {

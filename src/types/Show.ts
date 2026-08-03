@@ -527,6 +527,9 @@ export interface Overlay {
     actions?: any[]
     placeUnderSlide?: boolean
     displayDuration?: number
+    // when set, this overlay only activates on the listed output IDs instead
+    // of every currently active output - empty/undefined means no restriction
+    restrictToOutputs?: string[]
 }
 
 export interface Templates {

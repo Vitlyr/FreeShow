@@ -155,6 +155,7 @@ export const contextMenuItems: { [key: string]: ContextMenuItem } = {
     dynamic_values: { label: "actions.dynamic_values", icon: "dynamic", iconColor: "#ff91fd" },
     conditions: { label: "actions.conditions", icon: "light", iconColor: "#ff91fd" },
     item_bind_to: { label: "actions.bind_to", icon: "bind", iconColor: "#d497ff", items: ["LOAD_bind_item"] },
+    overlay_bind_to: { label: "actions.bind_to", icon: "bind", iconColor: "#d497ff", items: ["LOAD_bind_overlay"] },
     format: { label: "actions.format", icon: "format", iconColor: "#93f190", items: ["find_replace", "SEPARATOR", "cut_in_half", "merge", "SEPARATOR", "uppercase", "lowercase", "capitalize", "trim"] },
     rearrange: { label: "actions.rearrange", icon: "rearrange", iconColor: "#93f190", items: ["to_front", "forward", "backward", "to_back"] },
     rearrange_stage: { label: "actions.rearrange", icon: "rearrange", iconColor: "#93f190", items: ["to_front_stage", "forward_stage", "backward_stage", "to_back_stage"] },
@@ -291,7 +292,7 @@ export const contextMenuLayouts: { [key: string]: string[] } = {
     media_card: ["GROUP_open", "createSlideshow", "play_no_audio", "play_no_filters", "SEPARATOR", "favourite", "SEPARATOR", "media_tag_set", "media_tag_filter", "sort_media_by", "SEPARATOR", "system_open"],
     // "addToFirstSlide",
     drawer_overlays: ["reset_defaults"],
-    overlay_card: ["GROUP_open", "overlay_actions", "display_duration", "SEPARATOR", "lock_to_output", "place_under_slide", "SEPARATOR", "rename", "recolor", "duplicate", "delete"], // "GROUP_rename_color"
+    overlay_card: ["GROUP_open", "overlay_actions", "display_duration", "overlay_bind_to", "SEPARATOR", "lock_to_output", "place_under_slide", "SEPARATOR", "rename", "recolor", "duplicate", "delete"], // "GROUP_rename_color"
     overlay_card_default: ["GROUP_open", "duplicate", "delete"],
     overlay_card_readonly: ["preview"],
     // "addToShow",
