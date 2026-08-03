@@ -176,7 +176,11 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
             // drop overlay ids that are restricted to a different set of outputs -
             // centralized here (rather than in each caller: overlayClick, actions,
             // API/remote) so every activation path respects the restriction.
-            if (type === "overlays" && data) {
+            // Only intervene when there were ids to filter in the first place -
+            // an empty array is a valid "clear overlays on this output" input
+            // (see clearOverlays() in output/clear.ts), and bailing out on it
+            // used to skip the clear entirely, leaving stale overlays behind.
+            if (type === "overlays" && data && (!Array.isArray(data) || data.length)) {
                 const overlayIds: string[] = Array.isArray(data) ? data : [data]
                 const allowedIds = overlayIds.filter((overlayId) => {
                     const restrict = get(overlays)[overlayId]?.restrictToOutputs
