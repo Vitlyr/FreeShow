@@ -11,7 +11,7 @@
     function download() {
         // Always this fork's own releases page - freeshow.app serves
         // upstream's official installer, not this fork's build.
-        sendMain(Main.URL, "https://github.com/Vitlyr/FreeShow/releases")
+        sendMain(Main.URL, "https://github.com/vreykin/FreeShow/releases")
 
         activePopup.set(null)
         popupData.set({})
