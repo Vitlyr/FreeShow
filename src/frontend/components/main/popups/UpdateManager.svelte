@@ -51,8 +51,9 @@
     function downloadLatest() {
         if (!hasUpdate || !latestVersion) return
 
-        const isBeta = latestVersion.includes("-beta")
-        sendMain(Main.URL, isBeta ? "https://github.com/ChurchApps/FreeShow/releases" : "https://freeshow.app/?download")
+        // Always this fork's own releases page - freeshow.app serves
+        // upstream's official installer, not this fork's build.
+        sendMain(Main.URL, "https://github.com/Vitlyr/FreeShow/releases")
     }
 
     onMount(checkUpdates)

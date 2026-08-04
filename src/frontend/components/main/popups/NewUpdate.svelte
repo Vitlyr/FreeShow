@@ -7,11 +7,11 @@
     import MaterialButton from "../../inputs/MaterialButton.svelte"
 
     let changelog = ($popupData.changelog || "").replaceAll("\r\n", "<br>").replaceAll("-", "•")
-    let latestVersion = $popupData.latestVersion
 
     function download() {
-        const isBeta = latestVersion.includes("-beta")
-        sendMain(Main.URL, isBeta ? "https://github.com/ChurchApps/FreeShow/releases" : "https://freeshow.app/?download")
+        // Always this fork's own releases page - freeshow.app serves
+        // upstream's official installer, not this fork's build.
+        sendMain(Main.URL, "https://github.com/Vitlyr/FreeShow/releases")
 
         activePopup.set(null)
         popupData.set({})

@@ -8,7 +8,10 @@ interface UpdateData {
 }
 
 export async function getUpdateData(currentVersion: string, includeBeta: boolean): Promise<UpdateData> {
-    const response = await fetch("https://api.github.com/repos/ChurchApps/freeshow/releases")
+    // Repointed to this fork (Vitlyr/FreeShow) - checking upstream's repo
+    // would notify users about ChurchApps releases that this fork's own
+    // version numbers/features have diverged from.
+    const response = await fetch("https://api.github.com/repos/Vitlyr/FreeShow/releases")
     const data = await response.json()
 
     const latestAll = data.filter((a: any) => a.draft === false)[0]
