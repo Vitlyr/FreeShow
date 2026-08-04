@@ -100,9 +100,15 @@
             <div class="unsaved" />
         {/if}
         <!-- logo -->
-        <h1 style="align-self: center;width: 100%;padding: 0px 10px;text-align: center;font-size: 1.8em;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
-            FreeShow<span style="font-size: 0.45em;font-weight: normal;opacity: 0.55;margin-inline-start: 4px;">(Remastered)</span>
-        </h1>
+        <!-- Just "FreeShow" here, not the "(Remastered)" suffix used
+             elsewhere (Splash/About/ProfileSelector/loading screen) -
+             this toolbar is a hard 40px-tall flex row (see .top below),
+             and adding the extra inline text pushed the h1's layout past
+             what that fixed height/width comfortably fits. Not worth
+             fighting flex sizing blind without being able to see it
+             render - the branding still shows correctly in the 5+ other
+             spots that have real room for it. -->
+        <h1 style="align-self: center;width: 100%;padding: 0px 10px;text-align: center;font-size: 1.8em;">FreeShow</h1>
         <!-- <div class="logo">
             <img style="height: 35px;" src="./import-logos/freeshow.webp" alt="FreeShow-logo" draggable={false} />
             <h1 style="color: var(--text);font-size: 1.7em;">FreeShow</h1>
