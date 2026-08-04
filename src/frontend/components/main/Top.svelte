@@ -100,12 +100,9 @@
             <div class="unsaved" />
         {/if}
         <!-- logo -->
-        <!-- font-size reduced from 1.8em: "FreeShow (Remastered)" is
-             noticeably longer than "FreeShow" and this sits in a fixed-
-             width toolbar slot, not a standalone heading - couldn't
-             visually verify this fits without truncating/wrapping, so
-             erring toward a size more likely to. -->
-        <h1 style="align-self: center;width: 100%;padding: 0px 10px;text-align: center;font-size: 1.1em;">FreeShow (Remastered)</h1>
+        <h1 style="align-self: center;width: 100%;padding: 0px 10px;text-align: center;font-size: 1.8em;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+            FreeShow<span style="font-size: 0.45em;font-weight: normal;opacity: 0.55;margin-inline-start: 4px;">(Remastered)</span>
+        </h1>
         <!-- <div class="logo">
             <img style="height: 35px;" src="./import-logos/freeshow.webp" alt="FreeShow-logo" draggable={false} />
             <h1 style="color: var(--text);font-size: 1.7em;">FreeShow</h1>

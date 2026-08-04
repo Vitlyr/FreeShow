@@ -25,7 +25,7 @@
 <div style="text-align: center;">
     <div class="logo">
         <img style="height: 35px;" src="./import-logos/freeshow.webp" alt="FreeShow-logo" draggable={false} />
-        <h1 style="color: var(--text);font-size: 1.7em;">FreeShow (Remastered)</h1>
+        <h1 style="color: var(--text);font-size: 1.7em;">FreeShow<span style="font-size: 0.4em;font-weight: normal;opacity: 0.55;margin-inline-start: 6px;">(Remastered)</span></h1>
     </div>
 
     <p style="font-size: 0.8em;margin-top: 2px;">
