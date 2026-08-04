@@ -365,14 +365,12 @@ export const previewShortcuts = {
         OutputHelper.advanceOutputs(e)
     },
     ArrowRight: (e: any) => {
-        if (e.ctrlKey || e.metaKey) return
         if (!e.preview && (get(activeEdit).items.length || get(activeStage).items.length)) return
 
         // e.preventDefault()
         OutputHelper.advanceOutputs(e)
     },
     ArrowLeft: (e: any) => {
-        if (e.ctrlKey || e.metaKey) return
         if (!e.preview && (get(activeEdit).items.length || get(activeStage).items.length)) return
 
         // e.preventDefault()
