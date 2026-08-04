@@ -10,12 +10,10 @@
     const ONE_DAY = 1000 * 60 * 60 * 24
 
     const messages = {
-        donate: "FreeShow (Remastered) is free because of the generous gifts of our users. Would you consider donating to FreeShow? With your help we can continue to meet the tech needs of the Church."
-        // welcome: "Welcome to FreeShow! We're glad to have you here. Explore the features and let us know if you need any help getting started.",
-        // update: "FreeShow has been updated to the latest version! Check out the new features and improvements we've made for a better experience."
+        github: "FreeShow (Remastered) is a free, open-source fork. Check out the project on GitHub - support links and more are there too."
     }
 
-    let activeMessage = "donate"
+    let activeMessage = "github"
     let message = messages[activeMessage]
     let key = `tipbar_${activeMessage}`
 
@@ -43,8 +41,8 @@
         })
     }
 
-    function donate() {
-        sendMain(Main.URL, "https://churchapps.org/partner#give")
+    function openGithub() {
+        sendMain(Main.URL, "https://github.com/vreykin/FreeShow")
         interact()
     }
 
@@ -54,15 +52,15 @@
 {#if !isClosed && !$isDev}
     <section class="toolbar" transition:slide={{ duration: 150 }}>
         <div class="text">
-            {#if activeMessage === "donate"}
-                <Icon id="heart" right size={0.8} white />
+            {#if activeMessage === "github"}
+                <Icon id="star" right size={0.8} white />
             {/if}
 
             {message}
 
-            {#if activeMessage === "donate"}
-                <MaterialButton style="margin-left: 10px;padding: 2px 10px;background: linear-gradient(160deg, #f0008c 0%, #d100db 10%, #b300f0 30%, #9000f0 50%, #8000f0 100%) !important;" on:click={donate}>
-                    <span style="font-weight: bold;color: white;">Donate</span>
+            {#if activeMessage === "github"}
+                <MaterialButton style="margin-left: 10px;padding: 2px 10px;background: linear-gradient(160deg, #f0008c 0%, #d100db 10%, #b300f0 30%, #9000f0 50%, #8000f0 100%) !important;" on:click={openGithub}>
+                    <span style="font-weight: bold;color: white;">GitHub</span>
                     <Icon id="launch" white />
                 </MaterialButton>
             {/if}
