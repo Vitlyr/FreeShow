@@ -3,12 +3,11 @@
     import { Main } from "../../../../types/IPC/Main"
     import { sendMain } from "../../../IPC/main"
     import { alertUpdates, special, version } from "../../../stores"
-    import { getUpdateData } from "../../../utils/checkForUpdates"
+    import { getUpdateData, renderChangelogMarkdown } from "../../../utils/checkForUpdates"
     import Loader from "../Loader.svelte"
     import T from "../../helpers/T.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import MaterialToggleSwitch from "../../inputs/MaterialToggleSwitch.svelte"
-    import InputRow from "../../input/InputRow.svelte"
 
     let loading = true
     let hasError = false
@@ -34,11 +33,10 @@
 
         try {
             const currentVersion = $version
-            const includeBeta = currentVersion.includes("-beta") || $special.betaVersionAlert
-            const updateData = await getUpdateData(currentVersion, includeBeta)
+            const updateData = await getUpdateData(currentVersion)
 
             latestVersion = updateData.latestVersion
-            changelog = (updateData.changelog || "").replaceAll("\r\n", "<br>").replaceAll("-", "•")
+            changelog = renderChangelogMarkdown(updateData.changelog || "")
             hasUpdate = updateData.hasUpdate
         } catch (error) {
             console.warn(error)
@@ -58,17 +56,11 @@
 
     onMount(checkUpdates)
 
-    $: isBeta = $version.includes("-beta")
     $: versionsMatch = !!latestVersion && $version === latestVersion
 </script>
 
 <div class="settings">
-    <InputRow arrow={$alertUpdates}>
-        <MaterialToggleSwitch style="flex: 1;" label="settings.alert_updates" checked={$alertUpdates} defaultValue={true} on:change={(e) => alertUpdates.set(e.detail)} />
-        <div slot="menu">
-            <MaterialToggleSwitch label="settings.alert_updates_beta" disabled={isBeta} checked={isBeta ? $alertUpdates : $special.betaVersionAlert} defaultValue={false} on:change={(e) => updateSpecial(e.detail, "betaVersionAlert")} />
-        </div>
-    </InputRow>
+    <MaterialToggleSwitch label="settings.alert_updates" checked={$alertUpdates} defaultValue={true} on:change={(e) => alertUpdates.set(e.detail)} />
 
     <MaterialToggleSwitch label="settings.auto_updates" checked={$special.autoUpdates} on:change={(e) => updateSpecial(e.detail, "autoUpdates")} />
 </div>
@@ -150,5 +142,43 @@
 
     .changelog-content {
         line-height: 1.4;
+    }
+    .changelog-content :global(h1),
+    .changelog-content :global(h2),
+    .changelog-content :global(h3),
+    .changelog-content :global(h4) {
+        color: var(--text);
+        margin: 14px 0 6px;
+        font-size: 1em;
+    }
+    .changelog-content :global(h1:first-child),
+    .changelog-content :global(h2:first-child),
+    .changelog-content :global(h3:first-child),
+    .changelog-content :global(h4:first-child) {
+        margin-top: 0;
+    }
+    .changelog-content :global(ul),
+    .changelog-content :global(ol) {
+        margin: 4px 0;
+        padding-inline-start: 22px;
+    }
+    .changelog-content :global(a) {
+        color: var(--secondary);
+    }
+    .changelog-content :global(code) {
+        background-color: var(--primary);
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+    .changelog-content :global(pre) {
+        background-color: var(--primary);
+        padding: 10px;
+        border-radius: 6px;
+        overflow-x: auto;
+    }
+    .changelog-content :global(pre code) {
+        background-color: transparent;
+        padding: 0;
     }
 </style>
