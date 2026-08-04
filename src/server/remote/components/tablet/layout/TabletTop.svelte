@@ -10,7 +10,9 @@
 
 <div class="top">
     <span class="logo-area">
-        <h1 style="align-self: center;width: 100%;padding: 0px 10px;text-align: center;font-size: 1.8em;">FreeShow</h1>
+        <!-- font-size reduced from 1.8em - see Top.svelte's identical
+             narrow-toolbar-slot comment. -->
+        <h1 style="align-self: center;width: 100%;padding: 0px 10px;text-align: center;font-size: 1.1em;">FreeShow (Remastered)</h1>
     </span>
     <span class="middle-buttons">
         <!-- Show Mode -->
