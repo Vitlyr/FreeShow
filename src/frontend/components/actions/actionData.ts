@@ -20,6 +20,8 @@ export const actionData = {
     // PRESENTATION
     next_slide: { SECTION: "preview.slide", name: "preview._next_slide", icon: "slide", incompatible: ["previous_slide", "random_slide", "index_select_slide", "name_select_slide", "id_select_group"] }, // common: true,
     previous_slide: { name: "preview._previous_slide", icon: "slide", incompatible: ["next_slide", "random_slide", "index_select_slide", "name_select_slide", "id_select_group"] }, // common: true,
+    universal_next: { name: "actions.universal_next", icon: "slide", incompatible: ["universal_previous"] },
+    universal_previous: { name: "actions.universal_previous", icon: "slide", incompatible: ["universal_next"] },
     random_slide: { name: "actions.random_slide", icon: "slide", incompatible: ["next_slide", "previous_slide", "index_select_slide", "name_select_slide", "id_select_group"] },
     index_select_slide: { name: "actions.index_select_slide", icon: "slide", input: "index", incompatible: ["next_slide", "previous_slide", "random_slide", "name_select_slide", "id_select_group"] },
     name_select_slide: { name: "actions.name_select_slide", icon: "groups", input: "strval", incompatible: ["next_slide", "previous_slide", "random_slide", "index_select_slide", "id_select_group"] },

@@ -82,6 +82,7 @@ import {
     updateVolumeValues,
     videoSeekTo
 } from "./apiHelper"
+import { moveOutputScripture, outputIsScripture } from "../drawer/bible/scripture"
 import { oscToAPI } from "./apiOSC"
 import { emitData } from "./emitters"
 import { sendRestCommandSync } from "./rest"
@@ -222,6 +223,9 @@ export const API_ACTIONS = {
     // PRESENTATION
     next_slide: () => OutputHelper.advanceOutputs("next"), // BC
     previous_slide: () => OutputHelper.advanceOutputs("previous"), // BC
+    // acts as next/previous slide by default, but navigates verses when a scripture is live in the output
+    universal_next: () => (outputIsScripture() ? moveOutputScripture(false) : OutputHelper.advanceOutputs("next")),
+    universal_previous: () => (outputIsScripture() ? moveOutputScripture(true) : OutputHelper.advanceOutputs("previous")),
     random_slide: () => randomSlide(),
     index_select_slide: (data: API_slide_index) => selectSlideByIndex(data), // BC
     name_select_slide: (data: API_strval) => selectSlideByName(data.value), // BC
