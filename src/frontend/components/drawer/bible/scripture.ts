@@ -12,7 +12,7 @@ import { ShowObj } from "../../../classes/Show"
 import { createCategory } from "../../../converters/importHelpers"
 import { requestMain, sendMain } from "../../../IPC/main"
 import { findBestBreak, splitTextContentInHalf } from "../../../show/slides"
-import { activeProject, activeScripture, activeShow, drawerTabsData, media, notFound, outLocked, overlays, scriptureHistory, scriptures, scripturesCache, scriptureSettings, styles, templates } from "../../../stores"
+import { activeProject, activeScripture, activeShow, drawerTabsData, media, notFound, openScripture, outLocked, overlays, scriptureHistory, scriptures, scripturesCache, scriptureSettings, styles, templates } from "../../../stores"
 import { trackScriptureUsage } from "../../../utils/analytics"
 import { TemplateHelper } from "../../../utils/templates"
 import { getKey } from "../../../values/keys"
@@ -1982,6 +1982,61 @@ export function moveSelection(lengths: { book: number; chapters: number; verses:
     }
 
     return { book, chapters, verses }
+}
+
+// Navigate the LIVE scripture output to the next/previous verse, independent
+// of whether the scripture drawer is open. This mirrors the whole-verse branch
+// of Scripture.svelte's _moveSelection, but sources the book/chapter/verse
+// counts by loading the bible directly instead of reading the drawer's reactive
+// state - so it also works with the drawer closed (keyboard arrows and the
+// universal_next / universal_previous API). Sub-verse stepping for the "split
+// long verses" setting is only available from the drawer itself.
+export async function moveOutputScripture(moveLeft: boolean) {
+    if (!outputIsScripture()) return
+
+    const tabId = get(drawerTabsData).scripture?.activeSubTab || ""
+    const active = get(activeScripture).reference
+    if (!tabId || active?.book === undefined || active?.book === null || !active.chapters?.length) return
+
+    // for collections, load the first version to read the structure/counts
+    const structureId = get(scriptures)[tabId]?.collection?.versions?.[0] || tabId
+    const bible = await loadJsonBible(structureId)
+    if (!bible) return
+
+    const currentChapter = Number(active.chapters[0])
+    const currentVerses = sortScriptureSelection(clone(active.verses?.[0] || []))
+    const firstVerse = getVerseIdParts(String(currentVerses[0] ?? 1)).id
+
+    let maxBooks = 0
+    let maxChapters = 0
+    let versesCount = 0
+    try {
+        maxBooks = bible.data?.books?.length || 0
+        const book = await bible.getBook(active.book)
+        maxChapters = book.data?.chapters?.length || 0
+        const chapter = await book.getChapter(currentChapter)
+        versesCount = chapter?.data?.verses?.length || 0
+
+        // moving left from verse 1 lands in the previous chapter, whose length
+        // determines where the new selection sits
+        if (moveLeft && firstVerse === 1 && currentChapter > 1) {
+            const prevChapter = await book.getChapter(currentChapter - 1)
+            versesCount = prevChapter?.data?.verses?.length || versesCount
+        }
+    } catch (err) {
+        console.error("Error loading scripture structure for navigation:", err)
+        return
+    }
+
+    const newSelection = moveSelection({ book: maxBooks, chapters: maxChapters, verses: versesCount }, { book: Number(active.book), chapters: [currentChapter], verses: currentVerses }, moveLeft)
+
+    // update the active reference so playScripture picks up the new verse, and
+    // signal the drawer (via openScripture) so its selection follows if mounted
+    const reference = { book: newSelection.book, chapters: newSelection.chapters, verses: [newSelection.verses] }
+    activeScripture.set({ id: tabId, reference })
+    openScripture.set({ book: newSelection.book, chapter: newSelection.chapters[0], verses: [newSelection.verses] })
+
+    await playScripture()
 }
 
 export function getShortBibleName(name: string) {
