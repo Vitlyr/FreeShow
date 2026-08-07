@@ -1,8 +1,11 @@
 import { get } from "svelte/store"
 import { uid } from "uid"
+import { OUTPUT } from "../../types/Channels"
 import { Main } from "../../types/IPC/Main"
 import type { Output } from "../../types/Output"
+import type { SaveListSettings, SaveListSyncedSettings } from "../../types/Save"
 import type { Metadata, Themes } from "../../types/Settings"
+import { initAudioRouting } from "../audio/routing/audioRoutingInit"
 import { clone, keysToID } from "../components/helpers/array"
 import { checkFFmpeg, checkWindowCapture, setOutput, toggleOutputs } from "../components/helpers/output"
 import { defaultThemes } from "../components/settings/tabs/defaultThemes"
@@ -40,7 +43,6 @@ import {
     eqPresets,
     formatNewShow,
     fullColors,
-    gain,
     globalRegexes,
     globalTags,
     groupNumbers,
@@ -51,6 +53,7 @@ import {
     loaded,
     loadedState,
     lockedOverlays,
+    maxConnections,
     mediaFolders,
     mediaOptions,
     mediaTags,
@@ -59,6 +62,7 @@ import {
     openedFolders,
     os,
     outLocked,
+    outputs,
     overlayCategories,
     overlays,
     playerTags,
@@ -68,6 +72,8 @@ import {
     projectView,
     remotePassword,
     resized,
+    scriptureSettings,
+    scriptures,
     serverData,
     showRecentlyUsedProjects,
     showsPath,
@@ -75,6 +81,7 @@ import {
     songLibrarySync,
     sorted,
     special,
+    splitLines,
     styles,
     templateCategories,
     theme,
@@ -84,16 +91,12 @@ import {
     timeline,
     timerTags,
     timers,
+    transitionData,
     variableTags,
     variables,
     version,
-    videoMarkers,
-    videosData,
-    videosTime
-} from "../stores"
-import { OUTPUT } from "./../../types/Channels"
-import type { SaveListSettings, SaveListSyncedSettings } from "./../../types/Save"
-import { maxConnections, outputs, scriptureSettings, scriptures, splitLines, transitionData, volume } from "./../stores"
+    videoMarkers
+} from "./../stores"
 import { checkForUpdates } from "./checkForUpdates"
 import { isMainWindow, startAutosave } from "./common"
 import { setLanguage } from "./language"
@@ -213,11 +216,7 @@ function convertTriggersToActions(data: any) {
     return data
 }
 
-let videoDataUpdating = false
 export function restartOutputs(specificId = "") {
-    const data = clone(get(videosData))
-    const time = clone(get(videosTime))
-
     const allOutputs = keysToID(get(outputs))
     const outputIds = specificId ? [specificId] : allOutputs.filter((a) => a.enabled).map(({ id }) => id)
 
@@ -227,17 +226,6 @@ export function restartOutputs(specificId = "") {
 
         send(OUTPUT, ["CREATE"], { ...output, id })
     })
-
-    if (videoDataUpdating) return
-    videoDataUpdating = true
-
-    // restore output video data when recreating window
-    // WIP values are empty when sent
-    setTimeout(() => {
-        send(OUTPUT, ["DATA"], data)
-        send(OUTPUT, ["TIME"], time)
-        videoDataUpdating = false
-    }, 2200)
 }
 
 export function updateThemeValues(themeValues: Themes) {
@@ -363,8 +351,6 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
     audioPlaylists: (v: any) => audioPlaylists.set(v),
     theme: (v: any) => theme.set(v),
     transitionData: (v: any) => transitionData.set(v),
-    volume: (v: any) => volume.set(v),
-    gain: (v: any) => gain.set(v),
     audioChannelsData: (v: any) => audioChannelsData.set(v),
     emitters: (v: any) => emitters.set(v),
     midiIn: (v: any) => actions.set(v),
@@ -449,5 +435,6 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
         if (v?.enabled) sendMain(Main.SONG_LIBRARY_SYNC_UPDATE, { enabled: true, ip: v.ip || "localhost", port: v.port || 3030 })
     },
     effects: (a: any) => effects.set(a),
-    deletedDefaults: (a: any) => deletedDefaults.set({ ...get(deletedDefaults), ...a })
+    deletedDefaults: (a: any) => deletedDefaults.set({ ...get(deletedDefaults), ...a }),
+    audioRouting: (v: any) => initAudioRouting(v)
 }
