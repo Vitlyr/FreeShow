@@ -100,6 +100,14 @@ export type MainResponses = {
     [ID in Main | ToMain]?: MainHandler<ID>
 }
 
+// The startup projects load (see startup.ts) intentionally clears stale
+// "played" marks so a fresh session doesn't show last week's schedule. That
+// clear must run once, on that first load only - NOT on later Main.PROJECTS
+// pushes from the song-library sync, which carry a "played" state just set on
+// another device (e.g. marking a song off in the web schedule) and must be
+// preserved. This flag distinguishes the two.
+let projectsClearedOnStartup = false
+
 export const mainResponses: MainResponses = {
     // STORES
     [ToMain.SAVE2]: (a) => saveComplete(a),
@@ -123,12 +131,16 @@ export const mainResponses: MainResponses = {
         withExternalUpdate(() => {
             const projectsList = a.projects || {}
 
-            // remove "Mark as played" on startup
-            Object.values(projectsList).forEach((project) => {
-                project?.shows?.forEach((item) => {
-                    delete item.played
+            // remove stale "Mark as played" only on the first (startup) load;
+            // later sync pushes must keep played marks set on another device
+            if (!projectsClearedOnStartup) {
+                projectsClearedOnStartup = true
+                Object.values(projectsList).forEach((project) => {
+                    project?.shows?.forEach((item) => {
+                        delete item.played
+                    })
                 })
-            })
+            }
 
             projects.set(projectsList)
             folders.set(a.folders || {})
