@@ -6,7 +6,7 @@
     import { onMount } from "svelte"
     import { sanitizeVerseText } from "../../../../common/scripture/sanitizeVerseText"
     import { defaultBibleBookNames } from "../../../converters/bebliaBible"
-    import { activeEdit, activeScripture, activeTriggerFunction, customScriptureBooks, notFound, openScripture, outLocked, outputs, resized, scriptureHistory, scriptureMode, scriptures, scriptureSettings, selected } from "../../../stores"
+    import { activeScripture, activeTriggerFunction, customScriptureBooks, notFound, openScripture, outLocked, outputs, resized, scriptureHistory, scriptureMode, scriptures, scriptureSettings, selected } from "../../../stores"
     import { wait } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { clone } from "../../helpers/array"
@@ -884,12 +884,10 @@
             return
         }
 
-        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return
-        if ($activeEdit.items.length) return
-
-        // go to next/previous verse
-        let left = e.key.includes("Left")
-        _moveSelection(left)
+        // Verse navigation (Arrow / Ctrl+Arrow) is handled globally in
+        // shortcuts.ts (previewShortcuts) when a verse is live in the output,
+        // routed here via the scripture_next / scripture_previous triggers
+        // below. Handling arrows here too would advance the verse twice.
     }
 
     /// MOVE SELECTION ///

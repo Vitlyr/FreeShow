@@ -6,7 +6,7 @@ import type { DrawerTabIds, TopViews } from "../../types/Tabs"
 import { clearAudio } from "../audio/audioFading"
 import { AudioPlayer } from "../audio/audioPlayer"
 import { menuClick } from "../components/context/menuClick"
-import { createScriptureShow } from "../components/drawer/bible/scripture"
+import { createScriptureShow, outputIsScripture } from "../components/drawer/bible/scripture"
 import { addItem } from "../components/edit/scripts/itemHelpers"
 import { keysToID, sortByName } from "../components/helpers/array"
 import { copy, cut, deleteAction, duplicate, paste, selectAll } from "../components/helpers/clipboard"
@@ -381,11 +381,18 @@ export const previewShortcuts = {
     ArrowRight: (e: any) => {
         if (!e.preview && (get(activeEdit).items.length || get(activeStage).items.length)) return
 
+        // when a scripture verse is live, arrows (plain or Ctrl/Cmd) move
+        // between verses instead of advancing slides. anything else (a show
+        // playing, or nothing displayed) falls through to normal slide nav.
+        if (outputIsScripture()) return triggerFunction("scripture_next")
+
         // e.preventDefault()
         OutputHelper.advanceOutputs(e)
     },
     ArrowLeft: (e: any) => {
         if (!e.preview && (get(activeEdit).items.length || get(activeStage).items.length)) return
+
+        if (outputIsScripture()) return triggerFunction("scripture_previous")
 
         // e.preventDefault()
         OutputHelper.advanceOutputs(e)
