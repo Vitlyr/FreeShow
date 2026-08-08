@@ -4,6 +4,7 @@ import { clearAudio } from "../../audio/audioFading"
 import { AudioPlayer } from "../../audio/audioPlayer"
 import { activeEdit, activePage, activePopup, activeStage, contextActive, customMessageCredits, drawSettings, focusMode, lockedOverlays, outLocked, outputCache, outputs, outputSlideCache, overlays, overlayTimers, playingAudio, playingMetronome, selected, slideTimers, topContextActive } from "../../stores"
 import { customActionActivation } from "../actions/actions"
+import { markItemsAsPlayed } from "../../converters/project"
 import { startMetronome } from "../drawer/audio/metronome"
 import { clone } from "../helpers/array"
 import { clearOverlayTimer, getAllActiveOutputIds, getAllActiveOutputs, isOutCleared, setOutput } from "../helpers/output"
@@ -21,6 +22,8 @@ export function clearAll(button = false) {
     const allCleared = isOutCleared(null) && audioCleared
     if (allCleared) return
 
+    markPlayedOnFinish()
+
     storeCache()
 
     getActiveTimelinePlayback()?.stop()
@@ -31,6 +34,23 @@ export function clearAll(button = false) {
     clearOverlays()
     clearAudio("", { clearPlaylist: true, commonClear: true })
     clearTimers()
+}
+
+// When the output is resting on the last slide of a project show and the user
+// clears, mark that show "played" - the automatic equivalent of the manual
+// Mark as Played, so a song ticks itself off the schedule once you've
+// presented it through to the end. Skips temp/scripture/PDF output and shows
+// that weren't launched from a project (no projectIndex to mark).
+function markPlayedOnFinish() {
+    getAllActiveOutputs().forEach((output) => {
+        const slide = output?.out?.slide
+        if (!slide?.id || slide.id === "temp" || slide.type || slide.index === undefined || slide.projectIndex === undefined) return
+
+        const layoutRef = _show(slide.id).layouts([slide.layout]).ref()[0] || []
+        if (!layoutRef.length || slide.index < layoutRef.length - 1) return
+
+        markItemsAsPlayed([slide.projectIndex], true)
+    })
 }
 
 function storeCache() {
