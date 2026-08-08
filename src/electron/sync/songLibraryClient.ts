@@ -161,6 +161,8 @@ async function handleMessage(msg: Envelope) {
     switch (msg.type) {
         case "full_sync":
             return handleFullSync(msg.payload)
+        case "full_sync_songs":
+            return handleFullSyncSongs(msg.payload)
         case "song_upsert":
             return handleSongUpsert(msg.payload)
         case "song_delete":
@@ -318,4 +320,18 @@ async function handleFullSync(payload: { songs?: [string, Show][]; projects?: { 
             sendMain(Main.PROJECTS, data)
         }
     }
+}
+
+// One batch of songs from the batched full sync (see syncServer.js's
+// sendFullSync). Applying and refreshing per batch - rather than parsing and
+// writing the entire catalog from a single full_sync message - keeps the main
+// process responsive on startup, and streams songs into the library
+// progressively instead of all appearing at once at the end.
+async function handleFullSyncSongs(payload: { songs?: [string, Show][]; last?: boolean }) {
+    const changedNames: string[] = []
+    for (const [id, show] of payload?.songs || []) {
+        if (await applySongUpsert(id, show)) changedNames.push(show.name)
+    }
+
+    if (changedNames.length) await refreshShows(changedNames)
 }
