@@ -91,7 +91,11 @@ function connect() {
     socket.on("open", () => {
         console.log("songLibraryClient: connected")
         reconnectDelay = 1000
-        send(socket, "hello", { client: "freeshow" })
+        // caps lets the server tailor the response - "batched_songs" opts into
+        // receiving the catalog as full_sync_songs batches instead of one giant
+        // full_sync message (older servers just ignore it and send the legacy
+        // shape, which handleFullSync still understands)
+        send(socket, "hello", { client: "freeshow", caps: ["batched_songs"] })
         send(socket, "full_sync_request", {})
     })
 
